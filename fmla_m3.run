@@ -1,0 +1,22 @@
+reset;
+option solution_round 3;
+model SFMLA_var.mod;
+data SFMLA_VaR.dat;
+option solver gurobi;
+
+solve;
+option display_round 2;
+
+
+#option omit_zero_rows 1;
+
+display _total_solve_time;
+display u, u1;
+#display _nvars;
+#display _ncons;
+#display v, u, u1, v1;
+#display x, y, z, x1;
+#display Pcgn, Pcgk, Bcn, Bck;
+
+#display Ebk, Esk;
+#display Ebn, Esn;
