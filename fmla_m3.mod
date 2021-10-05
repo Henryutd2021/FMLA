@@ -1,4 +1,4 @@
-# model 3 original Big M method model (has problem warehouse and energy constraints)
+# model 3 nonlinear model
 
 
 set production;
@@ -37,20 +37,19 @@ param Ln{warehouse};
 
 param N1{warehouse, store};
 param T1{store};
-param ¦Ëk{1..J, 1..T, factory, renewables};
-param ¦Ën{1..J, 1..T, warehouse, renewables};
+param Â¦Ã‹k{1..J, 1..T, factory, renewables};
+param Â¦Ã‹n{1..J, 1..T, warehouse, renewables};
 
-param ¦Ões;
+param Â¦Ã•es;
 param des;
-param ¦Ñb;
-param ¦Ñs;
+param Â¦Ã‘b;
+param Â¦Ã‘s;
 param cs;
 
-param ¦Ã{warehouse, production};
+param Â¦Ãƒ{warehouse, production};
 param F{factory};
 param Fn{warehouse};
 param bes;
-param M;
 
 
 
@@ -63,7 +62,7 @@ var x1{production, 1..J, warehouse, store}>=0 integer;
 var u{factory} binary;
 var u1{warehouse} binary;
 
-#var v{factory, warehouse, production}>=0;
+var v{factory, warehouse, production, 1..J} binary;
 var v1{warehouse, store, production} binary;
 
 var Pcgk{factory, renewables}>=0 <=20;
@@ -87,108 +86,84 @@ var Esn{warehouse, 1..J, 1..T}>=0;
 
 
 
-minimize total_cost: sum{k in factory}F[k]*u[k]+sum{i in production, j in 1..J, k in factory, n in warehouse}p[i]*x[i, j, k, n]
+minimize total_cost: sum{k in factory}F[k]*u[k]+sum{i in production, j in 1..J, k in factory, n in warehouse}p[i]*x[i, j, k, n]*v[k, n, i, j]
 
-         +sum{i in production, j in 1..J, k in factory, n in warehouse}pi[i]*dis[k, n]*x[i, j, k, n]
+         +sum{i in production, j in 1..J, k in factory, n in warehouse}pi[i]*dis[k, n]*x[i, j, k, n]*v[k, n, i, j]
          
          +sum{n in warehouse}Fn[n]*u1[n]
          
-         +sum{i in production, j in 0..J, k in factory, n in warehouse}h[i]*y[i, j, n]
+         +sum{i in production, j in 0..J, n in warehouse}h[i]*y[i, j, n]*u1[n]
          
-         +sum{i in production, j in 0..J, k in factory, n in warehouse}b[i]*z[i, j, n]
+         +sum{i in production, j in 0..J, n in warehouse}b[i]*z[i, j, n]*u1[n]
          
-         +sum{i in production, j in 1..J, k in factory, n in warehouse, s in store}pi[i]*dis1[n, s]*x1[i, j, n, s]
-         
-         
-         +sum{g in renewables, k in factory}sita[g]*a[g]*Pcgk[k, g]
-         
-         +sum{j in 1..J, t in 1..T, g in renewables, k in factory}taog[g]*(B[g]-C[g])*Pcgk[k, g]*¦Ëk[j, t, k, g]
-         
-         +sum{k in factory}Bck[k]*(¦Ões*des+bes)
-         
-         +sum{t in 1..T, j in 1..J, k in factory}(¦Ñb*Ebk[k, j, t] - ¦Ñs*Esk[k, j, t])
-         
-         +sum{g in renewables, n in warehouse}sita[g]*a[g]*Pcgn[n, g]
-         
-         +sum{j in 1..J, t in 1..T, g in renewables, n in warehouse}taog[g]*(B[g]-C[g])*Pcgn[n, g]*¦Ën[j, t, n, g]
-         
-         +sum{n in warehouse}Bcn[n]*(¦Ões*des+bes)
-         
-         +sum{t in 1..T, j in 1..J, n in warehouse}(¦Ñb*Ebn[n, j, t] - ¦Ñs*Esn[n, j, t]);
+         +sum{i in production, j in 1..J, n in warehouse, s in store}pi[i]*dis1[n, s]*x1[i, j, n, s]*v1[n, s, i]
          
          
+         +sum{g in renewables, k in factory}sita[g]*a[g]*Pcgk[k, g]*u[k]
          
-#subj to c_22{n in warehouse, i in production}: sum{k in factory}v[k, n, i] = 1;
-
+         +sum{j in 1..J, t in 1..T, g in renewables, k in factory}taog[g]*(B[g]-C[g])*Pcgk[k, g]*Â¦Ã‹k[j, t, k, g]*u[k]
+         
+         +sum{k in factory}Bck[k]*(Â¦Ã•es*des+bes)*u[k]
+         
+         +sum{t in 1..T, j in 1..J, k in factory}(Â¦Ã‘b*Ebk[k, j, t] - Â¦Ã‘s*Esk[k, j, t])*u[k]
+         
+         +sum{g in renewables, n in warehouse}sita[g]*a[g]*Pcgn[n, g]*u1[n]
+         
+         +sum{j in 1..J, t in 1..T, g in renewables, n in warehouse}taog[g]*(B[g]-C[g])*Pcgn[n, g]*Â¦Ã‹n[j, t, n, g]*u1[n]
+         
+         +sum{n in warehouse}Bcn[n]*(Â¦Ã•es*des+bes)*u1[n]
+         
+         +sum{t in 1..T, j in 1..J, n in warehouse}(Â¦Ã‘b*Ebn[n, j, t] - Â¦Ã‘s*Esn[n, j, t])*u1[n];
+         
+         
+         
 subj to c_33{s in store, i in production}: sum{n in warehouse}v1[n, s, i] = 1;
 
-#subj to c_n33: sum{n in warehouse}u1[n] >= 1;
 
+subj to c_44{n in warehouse, i in production, j in 1..J}: sum{s in store}x1[i, j, n, s] <= u1[n]*Â¦Ãƒ[n, i];
 
-subj to c_44{n in warehouse, i in production, j in 1..J, s in store}: x1[i, j, n, s] <= u1[n]*¦Ã[n, i];
-
-subj to c_444{k in factory, n in warehouse, i in production, j in 1..J}: x[i, j, k, n] <= u1[n]*¦Ã[n, i];
+subj to c_444{n in warehouse, i in production, j in 1..J}: sum{k in factory}x[i, j, k, n] <= u1[n]*Â¦Ãƒ[n, i];
 
 subj to c_5{s in store, n in warehouse, i in production}:v1[n, s, i]<=u1[n];
-#subj to c_55{k in factory, n in warehouse, i in production}:v[k, n, i]<=u[k];
+subj to c_55{k in factory, n in warehouse, i in production,j in 1..J}:v[k, n, i, j]<=u[k]*u1[n];
 
 
 
-subject to supply_1{i in production, n in warehouse}: sum{k in factory}x[i, 1, k, n]+y[i, 0, n]-y[i, 1, n]+z[i, 1, n]
-                                =sum{s in store}x1[i, 1, n, s];
+subject to supply_1{i in production, n in warehouse}: sum{k in factory}x[i, 1, k, n]*v[k, n, i, 1]+y[i, 0, n]-y[i, 1, n]+z[i, 1, n]
+                                >=sum{s in store}x1[i, 1, n, s];
                                 
-subject to supply_2{i in production, j in 2..J-1, n in warehouse}: sum{k in factory}x[i, j, k, n]+y[i, j-1, n]-y[i, j, n]-z[i, j-1, n]+z[i, j, n]
-                                =sum{s in store}x1[i, j, n, s];
+subject to supply_2{i in production, j in 2..J-1, n in warehouse}: sum{k in factory}x[i, j, k, n]*v[k, n, i, j]+y[i, j-1, n]-y[i, j, n]-z[i, j-1, n]+z[i, j, n]
+                                >=sum{s in store}x1[i, j, n, s];
                                 
-subject to supply_3{i in production, n in warehouse}: sum{k in factory}x[i, J, k, n]+y[i, J-1, n]-y[i, J, n]-z[i, J-1, n]
-                                =sum{s in store}x1[i, J, n, s];
+subject to supply_3{i in production, n in warehouse}: sum{k in factory}x[i, J, k, n]*v[k, n, i, J]+y[i, J-1, n]-y[i, J, n]-z[i, J-1, n]
+                                >=sum{s in store}x1[i, J, n, s];
 
-                                                              
+
+
+                                                               
                                 
 subject to supply_n{i in production, s in store,j in 1..J}: sum{n in warehouse} x1[i, j, n, s]>= mu[i, s]+1.28*sigam[i, s];                                
                                 
                                 
                                 
-#subject to resourse{k in factory, r in res, j in 1..J}:sum{i in production, n in warehouse}vr[i, r]*x[i, j, k, n]-M*(1-u[k])<=w[j, k, r];
 
 
-#subject to resourse1{k in factory, r in res, j in 1..J}:sum{i in production, n in warehouse}vr[i, r]*x[i, j, k, n]+M*(1-u[k])>=w[j, k, r];
-#subject to resourse2{k in factory, r in res, j in 1..J}:sum{i in production, n in warehouse}vr[i, r]*x[i, j, k, n]-M*u[k]<=0;
+subject to resourse{k in factory, r in res, j in 1..J}:sum{i in production, n in warehouse}vr[i, r]*x[i, j, k, n]<=w[j, k, r]*u[k];
 
-subject to resourse{k in factory, r in res, j in 1..J}:sum{i in production, n in warehouse}vr[i, r]*x[i, j, k, n]<=w[j, k, r];
-subject to resourse1{k in factory,  i in production, n in warehouse, j in 1..J}:x[i, j, k, n]-M*u[k]<=0;
-subject to resourse2{s in store,  i in production, n in warehouse, j in 1..J}:x1[i, j, n, s]-M*v1[n, s, i]<=0;
 
 
 subject to inv0{i in production, n in warehouse}: y[i, 0, n]=0;
 
 
 
-subject to c_1{k in factory, j in 1..J, t in 1..T}:sum{g in renewables}taog[g]*Pcgk[k, g]*¦Ëk[j, t, k, g]-Bk[k, j, t]+Bk[k, j, t-1]-Esk[k, j, t]+Ebk[k, j, t]
-                                       -M*(1-u[k])<=sum{i in production, n in warehouse}(E[i]+qv*N[k, n]*dis[k, n]*m[i])*xt[i, k, n, j]
-                                                   +sum{n in warehouse}qv*N[k, n]*dis[k, n]*wv;
-subject to c_k2{k in factory, j in 1..J, t in 1..T}:sum{g in renewables}taog[g]*Pcgk[k, g]*¦Ëk[j, t, k, g]-Bk[k, j, t]+Bk[k, j, t-1]-Esk[k, j, t]+Ebk[k, j, t]
-                                       +M*(1-u[k])>=sum{i in production, n in warehouse}(E[i]+qv*N[k, n]*dis[k, n]*m[i])*xt[i, k, n, j]
-                                                   +sum{n in warehouse}qv*N[k, n]*dis[k, n]*wv;           
-subject to c_k3{k in factory, j in 1..J, t in 1..T}:sum{g in renewables}taog[g]*Pcgk[k, g]*¦Ëk[j, t, k, g]-Bk[k, j, t]+Bk[k, j, t-1]-Esk[k, j, t]+Ebk[k, j, t]
-                                       -M*u[k]<=0;  
-                                                
-subject to c_k4{k in factory, j in 1..J, t in 1..T}: Esk[k, j, t]-M*u[k]<=0;                           
-
-
-
+subject to c_1{k in factory, j in 1..J, t in 1..T}:sum{i in production, n in warehouse}(E[i]+qv*N[k, n]*dis[k, n]*m[i])*xt[i, k, n, j]
+           +sum{n in warehouse, i in production}qv*N[k, n]*dis[k, n]*wv*v[k, n, i, j]+(Bk[k, j, t]-Bk[k, j, t-1]+Esk[k, j, t]-Ebk[k, j, t])*u[k]
+           <=sum{g in renewables}taog[g]*Pcgk[k, g]*Â¦Ã‹k[j, t, k, g]*u[k];
            
-subject to c_2{n in warehouse, j in 1..J, t in 1..T}:sum{g in renewables}taog[g]*Pcgn[n, g]*¦Ën[j, t, n, g]-Bn[n, j, t]+Bn[n, j, t-1]-Esn[n, j, t]+Ebn[n, j, t]-M*(1-u1[n])
-                                                      <=tw[n]*Ln[n]+sum{k in factory}qv*N[k, n]*dis[k, n]*wv
-                                                      +sum{i in production, s in store}qv*dis1[n, s]*m[i]*xt1[i, n, s, j]
-                                                      +(sum{s in store}qv*N1[n, s]*dis1[n,s]*wv)*2;
-subject to c_n2{n in warehouse, j in 1..J, t in 1..T}:sum{g in renewables}taog[g]*Pcgn[n, g]*¦Ën[j, t, n, g]-Bn[n, j, t]+Bn[n, j, t-1]-Esn[n, j, t]+Ebn[n, j, t]+M*(1-u1[n])
-                                                      >=tw[n]*Ln[n]+sum{k in factory}qv*N[k, n]*dis[k, n]*wv
-                                                      +sum{i in production, s in store}qv*dis1[n, s]*m[i]*xt1[i, n, s, j]
-                                                      +(sum{s in store}qv*N1[n, s]*dis1[n,s]*wv)*2;                                                      
-subject to c_n3{n in warehouse, j in 1..J, t in 1..T}:sum{g in renewables}taog[g]*Pcgn[n, g]*¦Ën[j, t, n, g]-Bn[n, j, t]+Bn[n, j, t-1]-Esn[n, j, t]+Ebn[n, j, t]-M*u1[n]
-                                                      <=0;
-subject to c_n4{n in warehouse, j in 1..J, t in 1..T}: Esn[n, j, t]-M*u1[n]<=0;                                                       
+subject to c_2{n in warehouse, j in 1..J, t in 1..T}:tw[n]*Ln[n]*u1[n]+qv*sum{k in factory, i in production}N[k, n]*dis[k, n]*v[k, n, i, j]+qv*sum{i in production, s in store}dis1[n, s]*m[i]*xt1[i, n, s, j]
+           +sum{s in store, i in production}qv*N1[n, s]*dis1[n,s]*wv*v1[n, s, i]*2+(Bn[n, j, t]-Bn[n, j, t-1]+Esn[n, j, t]-Ebn[n, j, t])*u1[n]
+           <=sum{g in renewables}taog[g]*Pcgn[n, g]*Â¦Ã‹n[j, t, n, g]*u1[n];
+
 
 
 
@@ -211,9 +186,9 @@ subj to c_16{n in warehouse}: Bn[n, 52, 168] = Bcn[n];
 
 
 
-subj to c_12{t in 1..T,j in 1..J, k in factory}: Bk[k, j, t] <= Bck[k];
+subj to c_12{t in 1..T,j in 1..J, k in factory}: Bk[k, j, t] <= Bck[k]*u[k];
 
-subj to c_13{t in 1..T,j in 1..J, n in warehouse}: Bn[n, j, t] <= Bcn[n];
+subj to c_13{t in 1..T,j in 1..J, n in warehouse}: Bn[n, j, t] <= Bcn[n]*u1[n];
 
 
 
@@ -221,4 +196,3 @@ subj to c_13{t in 1..T,j in 1..J, n in warehouse}: Bn[n, j, t] <= Bcn[n];
 subj to c_21{k in factory, j in 2..J}: Bk[k, j, 0] = Bk[k, j-1, T];
 
 subj to c_222{n in warehouse, j in 2..J}: Bn[n, j, 0] = Bn[n, j-1, T];
-
