@@ -1,7 +1,7 @@
 reset;
 option solution_round 3;
-model SFMLA_var.mod;
-data SFMLA_VaR.dat;
+model m3n.mod;
+data m3n.dat;
 option solver gurobi;
 
 solve;
