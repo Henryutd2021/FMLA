@@ -1,0 +1,7 @@
+reset;
+model fmla_f.mod;
+data fmla_f.dat;
+option solver gurobi;
+solve;
+display _total_solve_time;
+display xk, xn, ykn, yks, yns;

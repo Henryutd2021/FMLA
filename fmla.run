@@ -1,0 +1,8 @@
+reset;
+option solution_round 3;
+model fmla.mod;
+data fmla.dat;
+option solver gurobi;
+solve;
+display _total_solve_time;
+#display x, y, Pcgn, Bcn, Bn, Pmax,Esn, Ebn;
